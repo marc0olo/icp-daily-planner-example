@@ -52,26 +52,13 @@ const App = () => {
 
   const handleFetchOnThisDay = async () => {
     showLoading();
-    const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
-    const day = selectedDate.getDate().toString().padStart(2, "0");
-    const url = `https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/${month}/${day}`;
-
     try {
-      const response = await fetch(url);
-      const data = await response.json();
-      if (data.selected && data.selected.length > 0) {
-        const item = data.selected[0];
-        const dateString = `${selectedDate.getFullYear()}-${
-          selectedDate.getMonth() + 1
-        }-${selectedDate.getDate()}`;
-        await backend.storeOnThisDay(
-          dateString,
-          item.text,
-          item.year,
-          item.pages[0].content_urls.desktop.page
-        );
-        renderDayDetail();
-      }
+      const dateString = `${selectedDate.getFullYear()}-${
+        selectedDate.getMonth() + 1
+      }-${selectedDate.getDate()}`;
+      const result = await backend.fetchAndStoreOnThisDay(dateString);
+      console.log(result);
+      renderDayDetail();
     } catch (error) {
       console.error("Error fetching On This Day data:", error);
     }
