@@ -1,5 +1,7 @@
 import Result "mo:base/Result";
 
+import IC "ic:aaaaa-aa";
+
 module Types {
 
     // general
@@ -25,43 +27,8 @@ module Types {
     // https outcall
     public type HttpsOutcallResult = Result.Result<OnThisDay, Text>;
 
-    public type HttpRequestArgs = {
-        url : Text;
-        max_response_bytes : ?Nat64;
-        headers : [HttpHeader];
-        body : ?[Nat8];
-        method : HttpMethod;
-        transform : ?TransformContext;
-    };
-
-    public type HttpHeader = {
-        name : Text;
-        value : Text;
-    };
-
-    public type HttpMethod = {
-        #get;
-        #post;
-        #head;
-    };
-
-    public type HttpResponsePayload = {
-        status : Nat;
-        headers : [HttpHeader];
-        body : [Nat8];
-    };
-
-    public type TransformContext = {
-        function : shared query TransformArgs -> async HttpResponsePayload;
-        context : Blob;
-    };
-
     public type TransformArgs = {
-        response : HttpResponsePayload;
+        response : IC.http_request_result;
         context : Blob;
-    };
-
-    public type IC = actor {
-        http_request : HttpRequestArgs -> async HttpResponsePayload;
     };
 };

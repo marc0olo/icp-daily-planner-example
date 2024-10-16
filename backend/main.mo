@@ -13,6 +13,8 @@ import Helpers "Helpers";
 import Serde "Serde";
 import Types "Types";
 
+import IC "ic:aaaaa-aa";
+
 actor {
 
   // create a stable variable to store the data
@@ -107,12 +109,12 @@ actor {
       let month = parts[1];
       let day = parts[2];
       // define the transform context
-      let transform_context : Types.TransformContext = {
+      let transform_context = {
         function = transformResponse;
         context = Blob.fromArray([]);
       };
       // prepare the https request
-      let http_request : Types.HttpRequestArgs = {
+      let http_request = {
         // API must support IPv6
         url = "https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/selected/" # month # "/" # day;
         // if not set, the https outcall is expensive and the max value of 2045952 is used to calculate the costs
@@ -131,10 +133,10 @@ actor {
 
       // init actor of the ic management canister
       // see https://internetcomputer.org/docs/current/references/ic-interface-spec#ic-management-canister
-      let ic : Types.IC = actor ("aaaaa-aa");
+      // let ic : Types.IC = actor ("aaaaa-aa");
       // execute the https outcall
-      let httpResponse : Types.HttpResponsePayload = await ic.http_request(http_request);
-      let responseBody : Blob = Blob.fromArray(httpResponse.body);
+      let httpResponse = await IC.http_request(http_request);
+      let responseBody : Blob = httpResponse.body;
       let decodedResult : Types.HttpsOutcallResult = switch (Serde.deserializeOnThisDay(responseBody)) {
         case (null) { #err("could not deserialize transformed response.") };
         case (?y) { #ok(y) };
@@ -155,15 +157,15 @@ actor {
     };
   };
 
-  public query func transformResponse(raw : Types.TransformArgs) : async Types.HttpResponsePayload {
-    let response_body : Blob = Blob.fromArray(raw.response.body);
+  public query func transformResponse(raw : Types.TransformArgs) : async IC.http_request_result {
+    let response_body : Blob = raw.response.body;
     let decoded_text : Text = switch (Text.decodeUtf8(response_body)) {
       case (null) { "No value returned" };
       case (?y) { y };
     };
-    let transformed : Types.HttpResponsePayload = {
+    let transformed = {
       status = raw.response.status;
-      body = Blob.toArray(Serde.serializeOnThisDay(Helpers.extractOnThisDayValues(decoded_text)));
+      body = Serde.serializeOnThisDay(Helpers.extractOnThisDayValues(decoded_text));
       headers = raw.response.headers;
     };
     transformed;
